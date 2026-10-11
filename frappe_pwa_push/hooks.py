@@ -96,7 +96,7 @@ app_license = "mit"
 # ------------
 
 # before_install = "frappe_pwa_push.install.before_install"
-# after_install = "frappe_pwa_push.install.after_install"
+after_install = "frappe_pwa_push.setup.install.after_install"
 
 # Uninstallation
 # ------------
@@ -199,9 +199,22 @@ app_license = "mit"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "frappe_pwa_push.event.get_events"
-# }
+# Frappe core (frappe.push_notification) and the PWA push client call a relay under the
+# `notification_relay.api.*` namespace. Frappe's own relay app is not published, so this
+# app serves that same API; overrides resolve before import, so no `notification_relay`
+# module needs to exist.
+override_whitelisted_methods = {
+	"notification_relay.api.auth.get_credential": "frappe_pwa_push.relay.auth.get_credential",
+	"notification_relay.api.get_config": "frappe_pwa_push.relay.config.get_config",
+	"notification_relay.api.token.add": "frappe_pwa_push.relay.token.add",
+	"notification_relay.api.token.remove": "frappe_pwa_push.relay.token.remove",
+	"notification_relay.api.topic.add": "frappe_pwa_push.relay.topic.add",
+	"notification_relay.api.topic.remove": "frappe_pwa_push.relay.topic.remove",
+	"notification_relay.api.topic.subscribe": "frappe_pwa_push.relay.topic.subscribe",
+	"notification_relay.api.topic.unsubscribe": "frappe_pwa_push.relay.topic.unsubscribe",
+	"notification_relay.api.send_notification.user": "frappe_pwa_push.relay.send_notification.user",
+	"notification_relay.api.send_notification.topic": "frappe_pwa_push.relay.send_notification.topic",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
@@ -271,4 +284,3 @@ app_license = "mit"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

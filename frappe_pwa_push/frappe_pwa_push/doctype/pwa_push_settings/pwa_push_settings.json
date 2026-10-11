@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "creation": "2026-10-11 13:23:12.630965",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "firebase_project_id",
+  "service_account_json",
+  "allowed_sites_section",
+  "allowed_sites"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "description": "Read from the service account JSON on save",
+   "fieldname": "firebase_project_id",
+   "fieldtype": "Data",
+   "label": "Firebase Project ID",
+   "read_only": 1
+  },
+  {
+   "description": "Firebase Console \u2192 Project settings \u2192 Service accounts \u2192 Generate new private key. Stored encrypted.",
+   "fieldname": "service_account_json",
+   "fieldtype": "Password",
+   "label": "Firebase Service Account JSON"
+  },
+  {
+   "fieldname": "allowed_sites_section",
+   "fieldtype": "Section Break",
+   "label": "Allowed Sites"
+  },
+  {
+   "description": "Only these sites may register with this relay",
+   "fieldname": "allowed_sites",
+   "fieldtype": "Table",
+   "label": "Allowed Sites",
+   "options": "PWA Push Allowed Site"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-11 13:23:12.630965",
+ "modified_by": "Administrator",
+ "module": "Frappe PWA Push",
+ "name": "PWA Push Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
