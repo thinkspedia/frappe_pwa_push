@@ -44,20 +44,24 @@ def _webhook_confirms_token(protocol: str, site_name: str, port: str, webhook_ro
 
 
 def _issue_credentials(site_name: str, protocol: str, port: str) -> dict:
-	user = frappe.get_doc("User", _get_or_create_client_user(site_name))
-	api_secret = frappe.generate_hash(length=15)
-	user.api_key = user.api_key or frappe.generate_hash(length=15)
-	user.api_secret = api_secret
-	user.save(ignore_permissions=True)
-
-	_upsert_client_site(site_name, protocol, port, user.name)
-	return {"api_key": user.api_key, "api_secret": api_secret}
-
-
-def _get_or_create_client_user(site_name: str) -> str:
 	email = f"pwa-push-client@{site_name}"
+	api_key = frappe.db.get_value("User", email, "api_key") or frappe.generate_hash(length=15)
+	api_secret = frappe.generate_hash(length=15)
+	_save_client_user(email, site_name, api_key, api_secret)
+
+	_upsert_client_site(site_name, protocol, port, email)
+	return {"api_key": api_key, "api_secret": api_secret}
+
+
+def _save_client_user(email: str, site_name: str, api_key: str, api_secret: str) -> None:
+	# Exactly one save per registration: every User save queues a create_contact job, and
+	# two of them racing for the same new user deadlock on tabContact.
+	keys = {"api_key": api_key, "api_secret": api_secret}
 	if frappe.db.exists("User", email):
-		return email
+		user = frappe.get_doc("User", email)
+		user.update(keys)
+		user.save(ignore_permissions=True)
+		return
 
 	ensure_client_role()
 	frappe.get_doc(
@@ -69,9 +73,9 @@ def _get_or_create_client_user(site_name: str) -> str:
 			"user_type": "Website User",
 			"send_welcome_email": 0,
 			"roles": [{"role": CLIENT_ROLE}],
+			**keys,
 		}
 	).insert(ignore_permissions=True)
-	return email
 
 
 def _upsert_client_site(site_name: str, protocol: str, port: str, user: str) -> None:
