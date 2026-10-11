@@ -122,12 +122,12 @@ class TestRelay(IntegrationTestCase):
 
 		with patch("frappe_pwa_push.relay.fcm.frappe.enqueue") as enqueue:
 			response = send_notification.user(
-				"user@example.test",
-				"Leave approved",
-				"Body",
-				PROJECT,
-				CLIENT_SITE,
-				json.dumps({"click_action": "/hrms"}),
+				user_id="user@example.test",
+				project_name=PROJECT,
+				site_name=CLIENT_SITE,
+				title="Leave approved",
+				body="Body",
+				data=json.dumps({"click_action": "/hrms"}),
 			)
 
 		self.assertTrue(response["success"])
@@ -136,6 +136,18 @@ class TestRelay(IntegrationTestCase):
 		self.assertEqual(
 			kwargs["payload"], {"click_action": "/hrms", "title": "Leave approved", "body": "Body"}
 		)
+
+	def test_send_without_title_still_queues(self):
+		self.act_as_client()
+		token.add("user@example.test", "token-1", PROJECT, CLIENT_SITE)
+
+		with patch("frappe_pwa_push.relay.fcm.frappe.enqueue") as enqueue:
+			response = send_notification.user(
+				user_id="user@example.test", project_name=PROJECT, site_name=CLIENT_SITE, body="Body"
+			)
+
+		self.assertTrue(response["success"])
+		self.assertEqual(enqueue.call_args.kwargs["payload"], {"title": "", "body": "Body"})
 
 	def test_send_to_topic_reaches_only_subscribers(self):
 		self.act_as_client()
@@ -147,7 +159,13 @@ class TestRelay(IntegrationTestCase):
 		)
 
 		with patch("frappe_pwa_push.relay.fcm.frappe.enqueue") as enqueue:
-			send_notification.topic("announcements", "Title", "Body", PROJECT, CLIENT_SITE)
+			send_notification.topic(
+				topic_name="announcements",
+				project_name=PROJECT,
+				site_name=CLIENT_SITE,
+				title="Title",
+				body="Body",
+			)
 
 		self.assertEqual(enqueue.call_args.kwargs["tokens"], ["token-1"])
 
@@ -168,7 +186,10 @@ class TestRelay(IntegrationTestCase):
 		):
 			fcm.deliver(["dead-token", "live-token"], {"title": "Title", "body": "Body"})
 
-		self.assertEqual(frappe.get_all("PWA Push Token", pluck="fcm_token"), ["live-token"])
+		remaining = frappe.get_all(
+			"PWA Push Token", filters={"fcm_token": ["in", ["dead-token", "live-token"]]}, pluck="fcm_token"
+		)
+		self.assertEqual(remaining, ["live-token"])
 
 	def test_payload_values_are_strings(self):
 		payload = fcm.build_payload("Title", "Body", json.dumps({"count": 3, "click_action": "/hrms"}))

@@ -6,9 +6,16 @@ from frappe_pwa_push.relay.fcm import queue_delivery
 from frappe_pwa_push.relay.topic import get_topic
 
 
+# title/body default to "": the client drops None-valued form fields (e.g. HRMS sends a PWA
+# Notification's reference doctype as the title, which may be empty), and that must not fail.
 @frappe.whitelist(methods=["POST"])
 def user(
-	user_id: str, title: str, body: str, project_name: str, site_name: str, data: str | None = None
+	user_id: str,
+	project_name: str,
+	site_name: str,
+	title: str = "",
+	body: str = "",
+	data: str | None = None,
 ) -> dict:
 	client_site = get_client_site(site_name)
 	if not is_project_enabled(project_name):
@@ -25,7 +32,12 @@ def user(
 
 @frappe.whitelist(methods=["POST"])
 def topic(
-	topic_name: str, title: str, body: str, project_name: str, site_name: str, data: str | None = None
+	topic_name: str,
+	project_name: str,
+	site_name: str,
+	title: str = "",
+	body: str = "",
+	data: str | None = None,
 ) -> dict:
 	client_site = get_client_site(site_name)
 	if not is_project_enabled(project_name):
