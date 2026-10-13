@@ -202,6 +202,9 @@ class TestRelay(IntegrationTestCase):
 		self.assertEqual(frappe.response["config"], WEB_CONFIG)
 		self.assertEqual(frappe.response["vapid_public_key"], "vapid-public-key")
 
+	def test_get_config_without_project_is_a_validation_error(self):
+		self.assertRaises(frappe.ValidationError, config.get_config)
+
 	def test_settings_accept_hostnames_only(self):
 		settings = frappe.get_single("PWA Push Settings")
 		settings.set("allowed_sites", [{"site_name": "erp.example.test:8000"}])
